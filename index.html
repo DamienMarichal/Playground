@@ -1,40 +1,78 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <link rel="icon" type="image/svg+xml" href="/webstorm-icon-logo.svg" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>WS playground</title>
-  <link rel="stylesheet" href="/style.css">
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/webstorm-icon-logo.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>State Manager with Date Picker</title>
+    <link rel="stylesheet" href="/style.css">
 </head>
 <body>
 <header class="logo">
-  <a href="https://www.jetbrains.com/webstorm/">
-    <img src="/webstorm-logo.svg" alt="WebStorm logo" width="344"
-         height="90">
-  </a>
+    <a href="https://www.jetbrains.com/webstorm/">
+        <img src="/webstorm-logo.svg" alt="WebStorm logo" width="344" height="90">
+    </a>
 </header>
+
 <main id="app">
-  <h1 class="title">
-    Thank you for trying it out. <br /> Your first project is up and running
-    now.
-  </h1>
-  <section class="counter">
-    <div class="counter-info">
-      <p class="counter-text">Counter is</p>
-      <p class="counter-value" id="counter-value"></p>
-    </div>
-    <div class="counter-interaction">
-      <button id="increaseByOne" type="button">+1</button>
-      <button id="increaseByTwo" type="button">+2</button>
-      <button id="decreaseByOne" type="button">-1</button>
-      <button id="decreaseByTwo" type="button">-2</button>
-    </div>
-  </section>
+    <h1 class="title">State Manager with Date Picker</h1>
+
+    <section class="counter">
+        <!-- Color Button Section -->
+        <div class="button-container">
+            <button id="colorButton" class="color-button color-grey">Start</button>
+            <div class="sync-status" id="syncStatus"></div>
+        </div>
+
+        <!-- Date Control Section -->
+        <div class="date-control">
+            <!-- Date Navigation -->
+            <div class="date-navigation">
+                <button id="prevDate" class="nav-button">←</button>
+                <input type="date" id="datePicker" class="date-picker">
+                <button id="nextDate" class="nav-button">→</button>
+            </div>
+
+            <!-- Current State Display -->
+            <div class="date-value-container">
+                <div class="current-state">
+                    <span>Current Value: </span>
+                    <span id="currentValue">Start</span>
+                </div>
+            </div>
+
+            <!-- State History Section -->
+            <div class="state-history">
+                <h3>State History</h3>
+                <div id="historyList" class="history-list"></div>
+            </div>
+
+            <!-- Connection Status -->
+            <div class="connection-status">
+                <span id="connectionIndicator" class="connection-indicator"></span>
+                <span id="connectionText">Online</span>
+            </div>
+        </div>
+
+        <!-- Queue Status Section -->
+        <div class="queue-status">
+            <h3>Sync Queue</h3>
+            <div id="queueCount" class="queue-count">Items in queue: 0</div>
+            <button id="forceSync" class="sync-button">Force Sync</button>
+        </div>
+    </section>
 </main>
+
+<!-- Toast Messages Container -->
+<div id="toastContainer" class="toast-container"></div>
+
 <footer class="technologies">
-  <img src="/technologies.svg" alt="List of supported technologies">
+    <img src="/technologies.svg" alt="List of supported technologies">
+    <div class="version-info">
+        <span>Version 1.0.0</span>
+    </div>
 </footer>
+
 <script type="module" src="/src/main.js"></script>
 </body>
 </html>
