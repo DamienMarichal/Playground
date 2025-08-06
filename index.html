@@ -2,27 +2,54 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/webstorm-icon-logo.svg" />
+    <link rel="icon" type="image/svg+xml" href="/src/public/webstorm-icon-logo.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>State Manager with Date Picker</title>
-    <link rel="stylesheet" href="/style.css">
+    <link rel="stylesheet" href="/src/style/style.css">
 </head>
 <body>
 <header class="logo">
-    <a href="https://www.jetbrains.com/webstorm/">
-        <img src="/webstorm-logo.svg" alt="WebStorm logo" width="344" height="90">
-    </a>
+    <h1 class="title">Fatz</h1>
 </header>
 
 <main id="app">
-    <h1 class="title">State Manager with Date Picker</h1>
-
-    <section class="counter">
-        <!-- Color Button Section -->
+    <section class="button">
+        <!-- Replace the button-container div with this new structure -->
         <div class="button-container">
-            <button id="colorButton" class="color-button color-grey">Start</button>
+            <div class="button-group">
+                <label for="button1">Petit-Déjeuner</label>
+                <button id="button1" class="color-button color-grey">Start</button>
+
+                <label for="button2">Matinée</label>
+                <button id="button2" class="color-button color-grey">Start</button>
+
+                <label for="button3">Déjeuner</label>
+                <button id="button3" class="color-button color-grey">Start</button>
+
+                <label for="button4">Après-midi</label>
+                <button id="button4" class="color-button color-grey">Start</button>
+
+                <label for="button5">Diner</label>
+                <button id="button5" class="color-button color-grey">Start</button>
+
+                <label for="button6">Soirée</label>
+                <button id="button6" class="color-button color-grey">Start</button>
+            </div>
+
+            <div class="value-box-container">
+                <div class="value-box-group">
+                    <label for="value1">Poids</label>
+                    <input type="text" id="value1" class="value-box">
+                </div>
+                <div class="value-box-group">
+                    <label for="value2">Masse graisseuse</label>
+                    <input type="text" id="value2" class="value-box">
+                </div>
+            </div>
+
             <div class="sync-status" id="syncStatus"></div>
         </div>
+
 
         <!-- Date Control Section -->
         <div class="date-control">
@@ -30,7 +57,7 @@
             <div class="date-navigation">
                 <button id="prevDate" class="nav-button">←</button>
                 <input type="date" id="datePicker" class="date-picker">
-                <button id="nextDate" class="nav-button">→</button>
+                <!-- <button id="nextDate" class="nav-button">→</button> -->
             </div>
 
             <!-- Current State Display -->
@@ -40,7 +67,10 @@
                     <span id="currentValue">Start</span>
                 </div>
             </div>
-
+        </div>
+    </section>
+    <section class="status">
+        <div class="status-container">
             <!-- State History Section -->
             <div class="state-history">
                 <h3>State History</h3>
@@ -60,14 +90,17 @@
             <div id="queueCount" class="queue-count">Items in queue: 0</div>
             <button id="forceSync" class="sync-button">Force Sync</button>
         </div>
+
+        <!-- Toast Messages Container -->
+        <div id="toastContainer" class="toast-container"></div>
+
     </section>
 </main>
 
-<!-- Toast Messages Container -->
-<div id="toastContainer" class="toast-container"></div>
+
 
 <footer class="technologies">
-    <img src="/technologies.svg" alt="List of supported technologies">
+    <img src="/src/public/technologies.svg" alt="List of supported technologies">
     <div class="version-info">
         <span>Version 1.0.0</span>
     </div>

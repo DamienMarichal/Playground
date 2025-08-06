@@ -1,10 +1,70 @@
-// Constants and State Definitions
+// Constants
+// 4 levels of food
+
 const colorStates = [
-    { color: 'grey', text: 'Start' },
-    { color: 'green', text: 'Hello' },
-    { color: 'yellow', text: 'World' },
-    { color: 'red', text: 'House' }
+    { color: 'grey', text: 'Rien' },
+    { color: 'green', text: 'Raisonable' },
+    { color: 'yellow', text: 'Trop' },
+    { color: 'red', text: 'Déraisonable' }
 ];
+
+// Manage the Button States for a Date
+class DateStateManager {
+    constructor() {
+        this.syncQueue = new SyncQueue();
+        this.dateStates = new Map();
+        this.loadDateStates();
+    }
+
+    loadDateStates() {
+        const savedStates = localStorage.getItem('dateStates');
+        if (savedStates) {
+            this.dateStates = new Map(JSON.parse(savedStates));
+        }
+    }
+
+    saveDateStates() {
+        localStorage.setItem('dateStates', JSON.stringify([...this.dateStates]));
+    }
+
+    getStateForDate(date) {
+        return this.dateStates.get(date) || {
+            buttonStates: Array(6).fill(0),
+            values: ['', ''],
+            timestamp: Date.now()
+        };
+    }
+
+    async changeState(date, buttonIndex, newStateIndex) {
+        const stateChange = {
+            id: crypto.randomUUID(),
+            date,
+            buttonIndex,
+            stateIndex: newStateIndex,
+            timestamp: Date.now(),
+            retryCount: 0
+        };
+
+        const currentState = this.getStateForDate(date);
+        const newButtonStates = [...currentState.buttonStates];
+        newButtonStates[buttonIndex] = newStateIndex;
+
+        const newState = {
+            ...currentState,
+            buttonStates: newButtonStates,
+            timestamp: stateChange.timestamp
+        };
+
+        this.dateStates.set(date, newState);
+        this.saveDateStates();
+
+        // Update UI
+        updateButtonState(buttonIndex, newStateIndex);
+        updateCurrentValue(colorStates[newStateIndex].text);
+        this.syncQueue.enqueue(stateChange);
+    }
+}
+
 
 // Queue Management System
 class SyncQueue {
@@ -20,6 +80,7 @@ class SyncQueue {
 
     saveQueue() {
         localStorage.setItem('syncQueue', JSON.stringify(this.queue));
+        document.getElementById('queueCount').textContent = `Items in queue: ${this.queue.length}`;
     }
 
     enqueue(stateChange) {
@@ -61,7 +122,6 @@ class SyncQueue {
         }
 
         this.isProcessing = false;
-
         if (this.queue.length > 0) {
             updateSyncStatus('pending');
         }
@@ -70,223 +130,144 @@ class SyncQueue {
     get length() {
         return this.queue.length;
     }
-
-    clear() {
-        this.queue = [];
-        this.saveQueue();
-    }
-}
-
-// Date State Manager
-class DateStateManager {
-    constructor() {
-        this.syncQueue = new SyncQueue();
-        this.dateStates = new Map();
-        this.loadDateStates();
-    }
-
-    loadDateStates() {
-        const savedStates = localStorage.getItem('dateStates');
-        if (savedStates) {
-            this.dateStates = new Map(JSON.parse(savedStates));
-        }
-    }
-
-    saveDateStates() {
-        localStorage.setItem('dateStates', JSON.stringify([...this.dateStates]));
-    }
-
-    getStateForDate(date) {
-        return this.dateStates.get(date) || {
-            stateIndex: 0,
-            timestamp: Date.now()
-        };
-    }
-
-    async changeState(date, newIndex) {
-        const stateChange = {
-            id: crypto.randomUUID(),
-            date: date,
-            stateIndex: newIndex,
-            timestamp: Date.now(),
-            retryCount: 0
-        };
-
-        this.dateStates.set(date, {
-            stateIndex: newIndex,
-            timestamp: stateChange.timestamp
-        });
-        this.saveDateStates();
-
-        updateButtonState(newIndex);
-        updateCurrentValue(colorStates[newIndex].text);
-
-        this.syncQueue.enqueue(stateChange);
-        updateSyncStatus('pending');
-    }
-
-    getStateHistory(date) {
-        const history = [];
-        this.syncQueue.queue.forEach(change => {
-            if (change.date === date) {
-                history.push({
-                    state: colorStates[change.stateIndex].text,
-                    timestamp: new Date(change.timestamp).toLocaleTimeString()
-                });
-            }
-        });
-        return history;
-    }
 }
 
 // API Functions
 async function syncWithAPI(stateChange) {
-    try {
-        const response = await fetch('YOUR_API_ENDPOINT', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                id: stateChange.id,
-                date: stateChange.date,
-                stateIndex: stateChange.stateIndex,
-                timestamp: stateChange.timestamp
-            })
-        });
-
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        return true;
-    } catch (error) {
-        console.error('Sync failed:', error);
-        stateChange.retryCount++;
-        return false;
-    }
+    // Simulated API call
+    return new Promise((resolve) => {
+        setTimeout(() => resolve(true), 1000);
+    });
 }
 
 // UI Update Functions
-function updateButtonState(stateIndex) {
-    // Remove all color classes
+function updateButtonState(buttonIndex, stateIndex) {
+    const button = document.getElementById(`button${buttonIndex + 1}`);
+    if (!button) return;
+
     colorStates.forEach(state => {
-        colorButton.classList.remove(`color-${state.color}`);
+        button.classList.remove(`color-${state.color}`);
     });
 
-    // Add new color class and update text
     const newState = colorStates[stateIndex];
-    colorButton.classList.add(`color-${newState.color}`);
-    colorButton.textContent = newState.text;
+    button.classList.add(`color-${newState.color}`);
+    button.textContent = newState.text;
 }
 
+// UI Update current value
 function updateCurrentValue(text) {
-    currentValue.textContent = text;
+    const currentValue = document.getElementById('currentValue');
+    if (currentValue) {
+        currentValue.textContent = text;
+    }
 }
 
+// UI Update sync status
 function updateSyncStatus(status) {
-    const statusClasses = {
-        synced: 'synced',
-        pending: 'pending',
-        processing: 'processing',
-        error: 'error'
-    };
+    const syncStatus = document.getElementById('syncStatus');
+    if (!syncStatus) return;
 
-    Object.values(statusClasses).forEach(className => {
-        colorButton.classList.remove(className);
-    });
-
-    colorButton.classList.add(status);
-
-    const statusMessages = {
-        synced: 'All changes synchronized',
-        pending: 'Changes waiting to be synchronized',
-        processing: 'Synchronizing changes...',
-        error: 'Sync error - will retry'
-    };
-
-    colorButton.title = statusMessages[status];
+    const statusClasses = ['synced', 'pending', 'processing', 'error'];
+    syncStatus.classList.remove(...statusClasses);
+    syncStatus.classList.add(status);
 }
 
+// UI Update for a Date
 function updateDisplayForDate(date) {
     const state = stateManager.getStateForDate(date);
-    updateButtonState(state.stateIndex);
-    updateCurrentValue(colorStates[state.stateIndex].text);
+    state.buttonStates.forEach((stateIndex, index) => {
+        updateButtonState(index, stateIndex);
+    });
 }
 
-// Date Management Functions
-function setDateBoundaries() {
-    const minDate = new Date();
-    minDate.setMonth(minDate.getMonth() - 1);
-    const minDateString = minDate.toISOString().split('T')[0];
-    datePicker.min = minDateString;
+// UI Date Management
+function setDateBoundaries(datePicker) {
+    const today = new Date();
+    const minDate = new Date(today);
+    minDate.setMonth(today.getMonth() - 1);
+    datePicker.min = minDate.toISOString().split('T')[0];
 
-    const maxDate = new Date();
-    maxDate.setMonth(maxDate.getMonth() + 1);
-    const maxDateString = maxDate.toISOString().split('T')[0];
-    datePicker.max = maxDateString;
+    const maxDate = new Date(today);
+    maxDate.setMonth(today.getMonth() + 1);
+    datePicker.max = maxDate.toISOString().split('T')[0];
 }
-
-
-// Initialize Components
-const datePicker = document.getElementById('datePicker');
-const currentValue = document.getElementById('currentValue');
-const colorButton = document.getElementById('colorButton');
-const stateManager = new DateStateManager();
-
-// Set initial date and boundaries
-const today = new Date().toISOString().split('T')[0];
-datePicker.value = today;
-setDateBoundaries();
-
-// Event Listeners
-datePicker.addEventListener('change', (e) => {
-    updateDisplayForDate(e.target.value);
-});
-
-colorButton.addEventListener('click', () => {
-    const currentDate = datePicker.value;
-    const currentState = stateManager.getStateForDate(currentDate);
-    const nextStateIndex = (currentState.stateIndex + 1) % colorStates.length;
-    stateManager.changeState(currentDate, nextStateIndex);
-});
-
-window.addEventListener('online', () => {
-    console.log('Back online, processing queue...');
-    stateManager.syncQueue.processQueue();
-});
-
-window.addEventListener('offline', () => {
-    console.log('Gone offline, sync paused');
-    updateSyncStatus('pending');
-});
-
-// Periodic queue processing
-setInterval(() => {
-    if (navigator.onLine) {
-        stateManager.syncQueue.processQueue();
-    }
-}, 30000);
-
-// Initial display update
-updateDisplayForDate(today);
-
-// Add these functions after your existing initialization code
 
 function navigateDate(direction) {
+    const datePicker = document.getElementById('datePicker');
+    if (!datePicker) return;
+
     const currentDate = new Date(datePicker.value);
     currentDate.setDate(currentDate.getDate() + direction);
-
-    // Format the date to YYYY-MM-DD
     const newDate = currentDate.toISOString().split('T')[0];
 
-    // Check if the new date is within boundaries
     if (newDate >= datePicker.min && newDate <= datePicker.max) {
         datePicker.value = newDate;
         updateDisplayForDate(newDate);
     }
 }
 
-// Add event listeners for the navigation buttons
-document.getElementById('prevDate').addEventListener('click', () => navigateDate(-1));
-document.getElementById('nextDate').addEventListener('click', () => navigateDate(1));
+
+// Main Program
+// Initialize
+const stateManager = new DateStateManager();
+
+// Event listeners
+document.addEventListener('DOMContentLoaded', () => {
+    const datePicker = document.getElementById('datePicker');
+
+    // Set today's date
+    const today = new Date().toISOString().split('T')[0];
+    datePicker.value = today;
+
+    // Set date boundaries
+    setDateBoundaries(datePicker);
+
+    // Initialize buttons
+    for (let i = 0; i < 6; i++) {
+        const button = document.getElementById(`button${i + 1}`);
+        if (button) {
+            button.addEventListener('click', () => {
+                const currentDate = datePicker.value;
+                const currentState = stateManager.getStateForDate(currentDate);
+                const nextStateIndex = (currentState.buttonStates[i] + 1) % colorStates.length;
+                stateManager.changeState(currentDate, i, nextStateIndex);
+            });
+        }
+    }
+
+    // Date picker change event
+    datePicker.addEventListener('change', (e) => {
+        updateDisplayForDate(e.target.value);
+    });
+
+    // Date navigation buttons
+    document.getElementById('prevDate')?.addEventListener('click', () => navigateDate(-1));
+    document.getElementById('nextDate')?.addEventListener('click', () => navigateDate(1));
+
+    // Force sync button
+    document.getElementById('forceSync')?.addEventListener('click', () => {
+        stateManager.syncQueue.processQueue();
+    });
+
+    // Online/Offline handlers
+    window.addEventListener('online', () => {
+        document.getElementById('connectionText').textContent = 'Online';
+        document.getElementById('connectionIndicator').classList.remove('offline');
+        stateManager.syncQueue.processQueue();
+    });
+
+    window.addEventListener('offline', () => {
+        document.getElementById('connectionText').textContent = 'Offline';
+        document.getElementById('connectionIndicator').classList.add('offline');
+    });
+
+    // Initial display update
+    updateDisplayForDate(today);
+
+    // Periodic queue processing
+    setInterval(() => {
+        if (navigator.onLine) {
+            stateManager.syncQueue.processQueue();
+        }
+    }, 30000);
+});
